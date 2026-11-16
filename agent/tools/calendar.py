@@ -1,4 +1,3 @@
-
 import json
 import re
 import time
@@ -7,6 +6,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 from . import Tool
 
+
 class CalendarTool(Tool):
     name = "get_calendar_day"
 
@@ -14,6 +14,7 @@ class CalendarTool(Tool):
         "Read all calendar appointments for one day. "
         "Use this to answer calendar questions. "
         "Convert the requested date to YYYY-MM-DD."
+        "When the user asks for a date range, fetch every day in the range, including both endpoints"
     )
 
     def __init__(self, log, base_url):
@@ -58,14 +59,10 @@ class CalendarTool(Tool):
                     ),
                 }
 
-            raise RuntimeError(
-                f"Calendar endpoint returned HTTP {exc.code}"
-            ) from None
+            raise RuntimeError(f"Calendar endpoint returned HTTP {exc.code}") from None
 
         except URLError:
-            raise RuntimeError(
-                "Could not reach the calendar endpoint"
-            ) from None
+            raise RuntimeError("Could not reach the calendar endpoint") from None
 
         return {
             "status": "ok",
@@ -76,15 +73,11 @@ class CalendarTool(Tool):
     @staticmethod
     def validate_date(args: dict) -> str:
         if not isinstance(args, dict) or set(args) != {"date"}:
-            raise ValueError(
-                "Tool arguments must contain exactly one field: date"
-            )
+            raise ValueError("Tool arguments must contain exactly one field: date")
 
         day = args["date"]
 
-        if not isinstance(day, str) or not re.fullmatch(
-            r"\d{4}-\d{2}-\d{2}", day
-        ):
+        if not isinstance(day, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day):
             raise ValueError("date must use YYYY-MM-DD")
 
         date.fromisoformat(day)
