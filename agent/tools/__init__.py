@@ -3,8 +3,7 @@ from abc import ABC, abstractmethod
 
 
 class ToolManager:
-    def __init__(self, log):
-        self.log = log
+    def __init__(self):
         self.tools = {}
 
     def register_tool(self, tool):
@@ -19,7 +18,6 @@ class ToolManager:
         return [tool.spec() for tool in self.tools.values()]
 
     def run_tool(self, name: str, args: dict) -> dict:
-        start = time.perf_counter()
 
         tool = self.get_tool(name)
         if not tool:
@@ -27,7 +25,6 @@ class ToolManager:
                 "status": "error",
                 "message": f"Tool with name '{name}' is not registered.",
             }
-            ok = False
 
         else:
             try:
@@ -43,18 +40,7 @@ class ToolManager:
                         else "Tool execution failed"
                     ),
                 }
-                ok = False
 
-        duration_ms = int((time.perf_counter() - start) * 1000)
-
-        self.log.write(
-            "tool_run",
-            ok=ok,
-            tool=name,
-            args=args,
-            duration_ms=duration_ms,
-            result=result,
-        )
         return result
 
 

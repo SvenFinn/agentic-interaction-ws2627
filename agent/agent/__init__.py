@@ -12,7 +12,7 @@ from openai.types.chat import (
 )
 
 from .config import Config
-from ..logger import RunLog
+from ..logger import RunLog, Event
 from ..tools import ToolManager
 
 ToolChoice = Literal["auto", "required", "none"]
@@ -43,7 +43,7 @@ class Agent(ABC):
             api_key=config.api_key,
             timeout=90,
         )
-        self.tools: ToolManager = ToolManager(log=self.log)
+        self.tools: ToolManager = ToolManager()
         self.register_tools(self.tools)
         self.history: list[ChatCompletionMessageParam] = []
 
@@ -58,15 +58,16 @@ class Agent(ABC):
         Note:
             Tool side effects are not rolled back.
         """
-        self.log.write("user_task", task=prompt)
+        self.log.write(Event.USER_TASK, task=prompt)
         checkpoint = len(self.history)
         self.history.append({"role": "user", "content": prompt})
 
         try:
             return self._loop(first_turn=checkpoint == 0)
-        except Exception:
+        except Exception as exc:
             # Don't leave half-finished tool calls in the history.
             del self.history[checkpoint:]
+            self.log.write(Event.ERROR, ok=False, error=str(exc))
             raise
 
     def _loop(self, first_turn: bool) -> str:
@@ -85,7 +86,7 @@ class Agent(ABC):
                 if not text:
                     raise RuntimeError("The model returned no final answer")
                 self.history.append({"role": "assistant", "content": text})
-                self.log.write("final", answer=text, duration_ms=model_ms)
+                self.log.write(Event.FINAL, answer=text, duration_ms=model_ms)
                 return text
 
             self.history.append(
@@ -136,7 +137,7 @@ class Agent(ABC):
             args = None
 
         self.log.write(
-            "tool_call",
+            Event.TOOL_CALL,
             tool=name,
             args=args,
             duration_ms=model_ms,
@@ -160,10 +161,10 @@ class Agent(ABC):
 
         if error is not None:
             result = {"status": "error", "message": error}
-            self.log.write("error", ok=False, tool=name, args=args, error=error)
+            self.log.write(Event.ERROR, ok=False, tool=name, args=args, error=error)
 
         self.log.write(
-            "tool_result",
+            Event.TOOL_RESULT,
             ok=error is None,
             tool=name,
             args=args,

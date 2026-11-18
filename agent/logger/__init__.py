@@ -1,10 +1,19 @@
 import uuid
 from datetime import datetime, timezone
+from enum import Enum
 import os
 from pathlib import Path
 import json
 
 ROOT = Path(__file__).resolve().parent.parent.parent
+
+
+class Event(str, Enum):
+    USER_TASK = "user_task"
+    TOOL_CALL = "tool_call"
+    TOOL_RESULT = "tool_result"
+    FINAL = "final"
+    ERROR = "error"
 
 
 class RunLog:
@@ -15,11 +24,13 @@ class RunLog:
         self.path = folder / f"{self.run_id}.jsonl"
         self.model = os.environ.get("MODEL", "")
 
-    def write(self, event, *, ok=True, tool=None, args=None, duration_ms=0, **extra):
+    def write(
+        self, event: Event, *, ok=True, tool=None, args=None, duration_ms=0, **extra
+    ):
         row = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "run_id": self.run_id,
-            "event": event,
+            "event": event.value,
             "tool": tool,
             "args": args,
             "ok": ok,
