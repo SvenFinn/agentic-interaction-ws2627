@@ -52,7 +52,7 @@ take precedence over values in `.env`.
 ## How to run it
 
 From the repository root, activate the virtual environment and pass a
-calendar question in quotes:
+calendar, weather, or train question in quotes:
 
 ```bash
 source .venv/bin/activate
@@ -66,6 +66,15 @@ in an inclusive date range before answering. For example:
 ```bash
 python -m agent "What appointments do I have between 2026-10-29 and 2026-10-31?"
 ```
+
+Weather and train tools can be used together in one task:
+
+```bash
+python -m agent "How do I get to Munich on 29 Oct 2026, and do I need an umbrella?"
+```
+
+The mock API is queried at `DATA_BASE_URL`. Missing weather or train data is
+reported as `no_data`; the agent does not infer unavailable values.
 
 If no question is supplied, the command exits with a usage message.
 

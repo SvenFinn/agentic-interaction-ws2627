@@ -1,5 +1,6 @@
 import time
 from abc import ABC, abstractmethod
+from ..logger import Event
 
 
 class ToolManager:
