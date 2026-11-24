@@ -53,6 +53,9 @@ class TravelWeatherAgent(Agent):
         tools.register_tool(
             TransitTool(log=self.log, base_url=self.config.data_base_url)
         )
+        tools.register_tool(
+            CalendarTool(log=self.log, base_url=self.config.data_base_url)
+        )
 
 
 if __name__ == "__main__":
